@@ -1,0 +1,256 @@
+# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
+# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+"$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
+
+[mgr]
+
+# 布局比例,父级宽度：2/8。当前位置宽度：4/8。 预览窗口宽度：3/8。
+ratio          = [ 2, 4, 3 ]
+
+# 按字母排序
+sort_by        = "alphabetical"
+
+# 区分大小写进行排序
+sort_sensitive = false
+
+# 以相反的顺序显示文件。
+sort_reverse 	 = false
+
+# 首先显示目录。
+sort_dir_first = true
+
+# 音译文件名进行排序, 仅在 sort_by = “natural” 时可用。
+sort_translit  = false
+
+# 在文件列表行的右侧显示与文件关联的信息。
+linemode       = "none"
+
+# 显示隐藏文件
+show_hidden    = true
+
+# 在文件名后面显示符号链接文件的路径指向。
+show_symlink   = true
+
+# 在文件列表中移动时，要保持在光标上方和下方的文件数。
+scrolloff      = 5
+
+# 插件系统可以接收的鼠标事件类型
+mouse_events   = [ "click", "scroll" ]
+
+# 终端标题格式，它是一个字符串
+title_format = "Luis position: {cwd}"
+
+[preview]
+
+# 在代码预览中显示换行
+wrap = "no"
+tab_size        = 5
+max_width       = 2000
+max_height      = 1500
+cache_dir       = "$HOME/.yazi/Caches"
+
+# 图片预览延迟，单位是毫秒（ms）, 1~100ms
+# 表示光标停留在文件上多长时间后开始加载图片
+image_delay = 35
+image_filter    = "triangle"
+
+# 预缓存图像的质量，范围为 50-90。
+image_quality   = 53
+#  Ueberzug 图像缩放比例，scale>1 用于放大，scale<1 用于缩小。例如，0.5 表示减少到一半。
+ueberzug_scale  = 1
+# ueberzug_offset （[x， y， width， height]）：Ueberzug 图像偏移，以单元格为单位。例如，[0.5， 0.5， -0.5， -0.5] 表示图像在两个方向上偏移半个像元，宽度和高度减少半个像元。
+ueberzug_offset = [ 0, 0, 0, 0 ]
+
+[opener]
+edit = [
+	{ run = '${EDITOR:-nvim} "$@"', desc = "$EDITOR", block = true, for = "unix" },
+	{ run = 'code %*',    orphan = true, desc = "code",           for = "windows" },
+	{ run = 'code -w %*', block = true,  desc = "code (block)",   for = "windows" },
+]
+open = [
+	{ run = 'xdg-open "$1"',                desc = "Open", for = "linux" },
+	{ run = 'open "$@"',                    desc = "Open", for = "macos" },
+	{ run = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
+]
+reveal = [
+	{ run = 'xdg-open "$(dirname "$1")"',           desc = "Reveal", for = "linux" },
+	{ run = 'open -R "$1"',                         desc = "Reveal", for = "macos" },
+	{ run = 'explorer /select,"%1"', orphan = true, desc = "Reveal", for = "windows" },
+	{ run = '''exiftool "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show EXIF", for = "unix" },
+]
+extract = [
+	{ run = 'ya pub extract --list "$@"', desc = "Extract here", for = "unix" },
+	{ run = 'ya pub extract --list %*',   desc = "Extract here", for = "windows" },
+]
+play = [
+	{ run = 'mpv --force-window "$@"', orphan = true, for = "unix" },
+	{ run = 'mpv --force-window %*', orphan = true, for = "windows" },
+	{ run = '''mediainfo "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show media info", for = "unix" },
+]
+
+[open]
+rules = [
+	# Folder
+	{ name = "*/", use = [ "edit", "open", "reveal" ] },
+	# Text
+	{ mime = "text/*", use = [ "edit", "reveal" ] },
+	# Image
+	{ mime = "image/*", use = [ "open", "reveal" ] },
+	# Media
+	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
+	# Archive
+	{ mime = "application/{,g}zip", use = [ "extract", "reveal" ] },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", use = [ "extract", "reveal" ] },
+	# JSON
+	{ mime = "application/{json,x-ndjson}", use = [ "edit", "reveal" ] },
+	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
+	# Empty file
+	{ mime = "inode/x-empty", use = [ "edit", "reveal" ] },
+	# Fallback
+	{ name = "*", use = [ "open", "reveal" ] },
+]
+
+[tasks]
+# 最大并发的微任务数（micro-tasks）
+# 微任务：轻量任务，比如生成预览、扫描目录等。
+micro_workers = 8
+
+# 最大并发的宏任务数（macro-tasks）
+# 宏任务：重量级任务，比如复制、移动、删除大文件。
+macro_workers = 4
+
+# 当出现奇怪（bizarre）错误时，最大重试次数
+bizarre_retry = 3
+
+# 是否隐藏系统的预加载任务（比如预览生成）
+# true：不在任务列表中显示，也不影响退出确认
+# false：显示预加载任务
+suppress_preload = true
+
+# 单个图片解码的内存限制（单位：字节）
+# 0 表示不限制
+# 示例：512MB = 512 * 1024 * 1024 = 536870912
+image_alloc = 536870912
+
+# 单个图片解码的最大尺寸限制（单位：像素）
+# 格式：[宽度, 高度]，0 表示不限制
+# 示例：最大 8000x8000 像素
+image_bound = [8000, 8000]
+
+[plugin]
+
+prepend_previewers = [
+  { name = "*.md", run = "glow" },
+]
+
+fetchers = [
+	# Mimetype
+	{ id = "mime", name = "*", run = "mime", if = "!mime", prio = "high" },
+]
+preloaders = [
+	# Image
+	{ mime = "image/{avif,heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*", run = "image" },
+	# Video
+	{ mime = "video/*", run = "video" },
+	# PDF
+	{ mime = "application/pdf", run = "pdf" },
+	# Font
+	{ mime = "font/*", run = "font" },
+	{ mime = "application/vnd.ms-opentype", run = "font" },
+]
+previewers = [
+	{ name = "*/", run = "folder", sync = true },
+	# Code
+	{ mime = "text/*", run = "code" },
+	{ mime = "*/{xml,javascript,x-wine-extension-ini}", run = "code" },
+	# JSON
+	{ mime = "application/{json,x-ndjson}", run = "json" },
+	# Image
+	{ mime = "image/{avif,heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*", run = "image" },
+	# Video
+	{ mime = "video/*", run = "video" },
+	# PDF
+	{ mime = "application/pdf", run = "pdf" },
+	# Archive
+	{ mime = "application/{,g}zip", run = "archive" },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar,iso9660-image}", run = "archive" },
+	# Font
+	{ mime = "font/*", run = "font" },
+	{ mime = "application/vnd.ms-opentype", run = "font" },
+	# Fallback
+	{ name = "*", run = "file" },
+]
+
+[input]
+cursor_blink = false
+
+# cd
+cd_title  = "切换目录："
+cd_origin = "top-center"
+cd_offset = [ 0, 2, 50, 3 ]
+
+# create
+create_title  = [ "创建文件：", "创建目录：" ]
+create_origin = "top-center"
+create_offset = [ 0, 2, 50, 3 ]
+
+# rename
+rename_title  = "重命名："
+rename_origin = "hovered"
+rename_offset = [ 0, 1, 50, 3 ]
+
+# filter
+filter_title  = "筛选："
+filter_origin = "top-center"
+filter_offset = [ 0, 2, 50, 3 ]
+
+# find
+find_title  = [ "查找下一个：", "查找上一个：" ]
+find_origin = "top-center"
+find_offset = [ 0, 2, 50, 3 ]
+
+# search
+search_title  = "通过 {n} 搜索："
+search_origin = "top-center"
+search_offset = [ 0, 2, 50, 3 ]
+
+# shell
+shell_title  = [ "Shell 命令：", "阻塞式 Shell 命令：" ]
+shell_origin = "top-center"
+shell_offset = [ 0, 2, 50, 3 ]
+
+[confirm]
+# trash d
+trash_title 	= "是否将选中的 {n} 个文件{s}放入回收站？"
+trash_origin	= "center"
+trash_offset	= [ 0, 0, 70, 20 ]
+
+# delete D
+delete_title 	= "是否永久删除选中的 {n} 个文件{s}？"
+delete_origin	= "center"
+delete_offset	= [ 0, 0, 70, 20 ]
+
+# overwrite
+overwrite_title  = "确认覆盖文件？"
+overwrite_body   = "将覆盖以下文件："
+overwrite_origin = "center"
+overwrite_offset = [ 0, 0, 50, 15 ]
+
+# quit
+quit_title  = "确认退出？"
+quit_body   = "以下任务仍在运行，确定要退出吗？"
+quit_origin = "center"
+quit_offset = [ 0, 0, 50, 15 ]
+
+[pick]
+open_title  = "选择打开方式："
+open_origin = "hovered"
+open_offset = [ 0, 1, 50, 7 ]
+
+[which]
+sort_by      	 = "none"
+sort_sensitive = false
+sort_reverse 	 = false
+sort_translit  = false
