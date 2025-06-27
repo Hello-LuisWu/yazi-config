@@ -217,7 +217,7 @@ search_origin = "top-center"
 search_offset = [ 0, 2, 50, 3 ]
 
 # shell
-shell_title  = [ "Shell 命令：", "阻塞式 Shell 命令：" ]
+shell_title  = [ "Shell 命令：", "Shell 命令(阻止直到完成)：" ]
 shell_origin = "top-center"
 shell_offset = [ 0, 2, 50, 3 ]
 

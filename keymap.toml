@@ -56,7 +56,7 @@ keymap = [
 	{ on = "J", run = "arrow bot", desc = "预览面板快速下移5行" },
 
 	# 定位（Spot）
-	{ on = "<Tab>", run = "spot", desc = "聚焦当前光标所在文件" },
+	{ on = "<Tab>", run = "spot", desc = "显示光标所在文件信息" },
 
 	# 文件操作
 	{ on = "o",         run = "open",                        desc = "打开选中的文件或目录" },
